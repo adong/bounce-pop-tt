@@ -234,7 +234,11 @@
     power.position.set(0, KID_H * scale + 0.42, 0);
     power.visible = false;
     root.add(power);
-    return { who, p, root, stars, power, ph: Math.random() * 6, rot: Math.PI, scale, lastPose: '' };
+    // Teddy's jump shot: the game adds the hop and the ball
+    const ball = sprite(G.emojiTexture('🏀'), 0.4);
+    ball.visible = false;
+    root.add(ball);
+    return { who, p, root, stars, power, ball, ph: Math.random() * 6, rot: Math.PI, scale, lastPose: '' };
   };
 
   // ---------------------------------------------------------------- confetti (one instanced mesh)
@@ -502,6 +506,12 @@
     else if (mode === 'climb') K.ph += dt * (pl.climbing ? 9 : 0);
     else K.ph += dt * 6;
     pose(K.p, K.ph, mode, k);
+    K.ball.visible = mode === 'jumpshot';
+    if (K.ball.visible) {
+      const hop = Math.abs(Math.sin(this.t * 3.2));
+      K.root.position.y = pl.y + hop * 0.45;
+      K.ball.position.set(0.05, KID_H + 0.25 + hop * 0.6, 0.2);
+    }
     // stars spin over a bonked kid's head
     K.stars.visible = pl.st === 'bonk';
     if (K.stars.visible) K.stars.children.forEach((s, j) => { const a = this.t * 6 + (j * Math.PI * 2) / 3; s.position.set(Math.cos(a) * 0.45, Math.sin(a * 2) * 0.06, Math.sin(a) * 0.3); });

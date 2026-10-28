@@ -91,7 +91,7 @@
             if (!(R.dx > 20 && Lm.dx < -20 && still)) bad.push(`L${L} ${r}/${l}: ${R.dx.toFixed(0)}/${Lm.dx.toFixed(0)}px${still ? '' : ' (moved the other kid)'}`);
           }
         }
-        check(`direction ${mode === '2p' ? '2P, each kid his own keys' : mode === 'cpu' ? 'with ' + (g.sim.players[1] || {}).who : '1P ' + hero}: → right, ← left on screen, ${N} levels`, bad.length === 0, bad.length ? bad.slice(0, 3).join('; ') : `${n} presses`);
+        check(`direction ${mode === '2p' ? '2P, each kid his own keys' : mode === 'cpu' ? 'with Froggy and Foxy' : '1P ' + hero}: → right, ← left on screen, ${N} levels`, bad.length === 0, bad.length ? bad.slice(0, 3).join('; ') : `${n} presses`);
       }
 
       // ---------------------------------------------------------------- ladders, every level that has one
@@ -353,5 +353,70 @@
     return { ok: mc && sc, lines };
   }
 
-  Object.assign(window.game, { playCheck, playProve });
+  // 中文: visit every screen (title, play in each mode, the brother, power-ups, a bump, time's up, pause, out of lives,
+  // a level clear, the end, the ? panel) and ask Kit.lang.untranslated(); push every toast and banner the game can make
+  // through the dictionary; then English: no Chinese anywhere on the page (the kit's own buttons aside).
+  async function langCheck() {
+    const g = window.game;
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const left = new Set();
+    const grab = async () => { await wait(60); for (const u of Kit.lang.untranslated()) left.add(u); };
+    const was = Kit.lang.get();
+    g.keepAwake();
+    Kit.lang.set('zh');
+    g.title(); await grab();
+    for (const [L, mode, hero, easy] of [[1, '1p', 'teddy', true], [17, '1p', 'tommy', false], [3, '2p', 'teddy', true], [9, 'cpu', 'teddy', true], [9, 'cpu', 'tommy', false]]) {
+      g.start(L, mode, hero, easy); run(0.2); await grab(); toPlay(); await grab();
+      g.call(); run(0.6); await grab(); run(1.3); await grab(); run(1.5); await grab();
+      const s = g.sim, p = s.players[0];
+      for (const kind of ['double', 'sticky', 'freeze', 'fruit']) s.take(p, { kind, x: p.x, y: 0 });
+      run(0.05); await grab();
+      s.freezeT = 0; p.safe = 0; Object.assign(s.balloons[0], { x: p.x, y: 1, vx: 0, vy: 0 }); run(0.1); await grab();
+      s.time = 0.05; run(0.2); await grab();
+      g.pause(); await grab(); g.resume();
+      s.lives = 1; s.freezeT = 0; p.safe = 0; p.st = 'walk'; Object.assign(s.balloons[0], { x: p.x, y: 1, vx: 0, vy: 0 }); run(0.2); await grab(); g.keepGoing(); await grab();
+      s.balloons = []; run(0.3); await grab(); run(3.5); await grab();
+    }
+    g.start(40, '2p', 'teddy', true); toPlay(); g.call(); await grab(); g.call(); await grab(); g.sim.balloons = []; run(7); await grab();
+    Kit.help.open(); await grab(); Kit.help.close();
+    const N = ['TEDDY', 'TOMMY', 'FROGGY', 'FOXY'], list = [];
+    for (const n of N) list.push(`BOING! ${n} SEES STARS! ⭐`, `🔗 DOUBLE ROPE FOR ${n}!`, `🍯 STICKY ROPE FOR ${n}!`, `${n} SAYS: FREEZE! ❄️`, `${n} IS COMING TO HELP!`, `BYE BYE, ${n}! 👋`, `CALL ${n}`, `${n} IS HERE!`,
+      ...BP.TREATS.map(([e, name]) => `${e} ${name} FROM ${n}!`));
+    list.push('OUT OF LIVES! 💔', "TIME'S UP! THE CLOCK STARTS AGAIN ⏱️", '🍓 YUM! +500', '⏰ FREEZE CLOCK! ❄️', 'LEVEL 3 CLEAR! +1,230 🎉', 'ALL 40 LEVELS! 🎉', 'KEEP GOING! ❤️', '✋ HIGH FIVE!', 'HIGH FIVE IN 2…',
+      'LEVEL 7 OF 40', '❄️ FROZEN 4', 'PLAY WITH FROGGY 🐸', 'PLAY WITH FOXY 🦊', 'Out of lives on level 12. Keep going: the balloons you popped stay popped!',
+      'Teddy popped every balloon at all 40 places!', 'Teddy and Tommy popped every balloon at all 40 places!', 'Tommy and Froggy popped every balloon at all 40 places!',
+      'SCORE 12,345', 'HI-SCORE 12,345', 'NEW HI-SCORE! 12,345', 'POP!', 'BOING!', 'FIRE');
+    for (let L = 0; L < BP.LEVELS; L++) { const d = BP.levelDef(L); list.push(d.name, d.tip); }
+    const bad = [];
+    for (const t of new Set(list)) {
+      const z = Kit.lang.t(t);
+      if (z === t || /[A-Za-z]{2,}/.test(z.replace(/TEDDY|TOMMY|FROGGY|FOXY|Teddy|Tommy|Froggy|Foxy/g, ''))) bad.push(t);
+    }
+    // English: no Chinese characters anywhere on the page
+    Kit.lang.set('en');
+    const cjk = /[\u3400-\u9fff]/, found = new Set();
+    const scan = async () => {
+      await wait(80);
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = w.nextNode())) { if (!n.parentElement.closest('[id^="kit-"],script,style') && cjk.test(n.nodeValue)) found.add(n.nodeValue.trim().slice(0, 30)); }
+      for (const el of document.querySelectorAll('[title],[aria-label],[placeholder]')) {
+        if (el.closest('[id^="kit-"]')) continue;
+        for (const a of ['title', 'aria-label', 'placeholder']) { const v = el.getAttribute(a); if (v && cjk.test(v)) found.add(`${a}: ${v}`); }
+      }
+    };
+    g.title(); await scan();
+    g.start(17, 'cpu', 'teddy', true); run(0.3); await scan(); g.call(); run(2.6); await scan(); g.pause(); await scan(); g.resume();
+    g.sim.balloons = []; run(1); await scan(); g.start(1, '2p', 'teddy', true); run(2); g.call(); await scan(); g.win(); await scan();
+    g.title();
+    Kit.lang.set(was);
+    const lines = [
+      `${left.size ? '✗' : '✓'} 中文: every screen visited, untranslated() ${left.size ? JSON.stringify([...left].slice(0, 5)) : '[]'}`,
+      `${bad.length ? '✗' : '✓'} 中文: ${new Set(list).size} toasts, banners and canvas words all translate${bad.length ? ': ' + bad.slice(0, 3).join(' | ') : ''}`,
+      `${found.size ? '✗' : '✓'} English: no Chinese on the page${found.size ? ': ' + [...found].slice(0, 3).join(' | ') : ''}`,
+    ];
+    return { ok: !left.size && !bad.length && !found.size, lines };
+  }
+
+  Object.assign(window.game, { playCheck, playProve, langCheck });
 })();

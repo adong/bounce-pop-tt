@@ -1,0 +1,7 @@
+[
+ { "label": "rules", "js": "(() => { const r = game.check(false); return (r.ok ? 'PASS ' : 'FAIL ') + r.lines.filter(l => l[0] !== '✓').join(' / '); })()" },
+ { "label": "rules fail variant", "js": "(() => { const r = game.prove(); return (r.ok ? 'PASS ' : 'FAIL ') + r.lines.join(' / '); })()" },
+ { "label": "play check", "js": "(() => { const r = game.playCheck(); return (r.ok ? 'PASS ' : 'FAIL ') + r.lines.join(' / '); })()" },
+ { "label": "play check fail variant", "js": "(() => { const r = game.playProve(); return (r.ok ? 'PASS ' : 'FAIL ') + r.lines.join(' / '); })()" },
+ { "label": "languages", "js": "game.langCheck().then((r) => (r.ok ? 'PASS ' : 'FAIL ') + r.lines.join(' / '))" }
+]
