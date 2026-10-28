@@ -6,7 +6,7 @@
 (function () {
   'use strict';
   const T = THREE, G = Kit.gfx, BP = window.BP, A = BP.art;
-  const { W, H, RADIUS, KID_H, ITEM } = Object.assign({}, BP, { ITEM: A.ITEM });
+  const { W, H, RADIUS, KID_H } = BP;
   const KID_S = KID_H / 2;          // Kit.people are about 2 m tall
   const SIG_T = 2.4;                // Teddy switches between boxing and the jump shot this often
   const BLOCK_COLS = ['#ff6b81', '#ffb84d', '#58b9ff', '#69d36a', '#b98aff', '#ff8fc8'];
@@ -112,6 +112,7 @@
     this.fx = [];
     this.buddy = null;
     this.level = -1;
+    this.bounced = [];
     this.makeStage();
     this.makeConfetti();
   }
@@ -368,6 +369,7 @@
   View.prototype.update = function (sim, dt) {
     this.t += dt;
     this.sim = sim;
+    this.bounced = [];
     if (this.level !== sim.level || this.levelSim !== sim) this.buildLevel(sim);
     const frozen = sim.freezeT > 0;
     // blocks
@@ -379,7 +381,7 @@
       let v = this.balloons.get(b.id);
       if (!v) { v = this.makeBalloon(b); this.balloons.set(b.id, v); this.dyn.add(v.g); }
       const r = RADIUS[b.s];
-      if (v.vy < 0 && b.vy > 0) v.squash = 0.16;
+      if (v.vy < 0 && b.vy > 0) { v.squash = 0.16; this.bounced.push(b.s); }
       v.vy = b.vy;
       v.squash = Math.max(0, v.squash - dt);
       const sq = v.squash > 0 ? Math.sin((v.squash / 0.16) * Math.PI) * 0.16 : 0;

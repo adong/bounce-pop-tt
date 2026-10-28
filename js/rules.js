@@ -72,7 +72,7 @@
     ledgeR: () => ({ blocks: [Bk(11, 2.9, 4, 0.5)], ladders: [{ x: 11.7, y0: 0, y1: 3.4 }] }),
     ledges: () => ({ blocks: [Bk(1, 2.9, 4, 0.5), Bk(11, 2.9, 4, 0.5)], ladders: [{ x: 4.3, y0: 0, y1: 3.4 }, { x: 11.7, y0: 0, y1: 3.4 }] }),
     bridge: () => ({ blocks: [Bk(5.5, 2.9, 5, 0.5)], ladders: [{ x: 6.1, y0: 0, y1: 3.4 }, { x: 9.9, y0: 0, y1: 3.4 }] }),
-    stairs: () => ({ blocks: [Bk(1, 2.9, 5.8, 0.5), Bk(6, 5.4, 4, 0.5)], ladders: [{ x: 1.8, y0: 0, y1: 3.4 }, { x: 6.4, y0: 3.4, y1: 5.9 }] }),
+    stairs: () => ({ blocks: [Bk(1, 2.9, 4, 0.5), Bk(11, 5.4, 4, 0.5)], ladders: [{ x: 4.3, y0: 0, y1: 3.4 }, { x: 11.7, y0: 0, y1: 5.9 }] }),
     glassTop: () => ({ blocks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((x) => Bk(x, 7.4, 1, 0.6, true)), top: 7.2 }),
   };
   const PLAN = [
@@ -85,7 +85,7 @@
     ['3@4 3@12', 'glassTop'], ['2@2 2@5 2@11 2@14', 'bridge'], ['3@8 3@2', 'pillars'], ['3@2 3@8 3@14', 'ledges'],
     ['0@1.5 0@3 0@4.5 0@6 0@10 0@11.5 0@13 0@14.5 3@8', 'bricks'], ['3@12 3@3 2@8', 'stairs'], ['3@3 3@13 2@6 2@10', 'shelves'], ['3@4 3@12 3@8', 'glassTop'],
     ['3@3 3@13 3@8', 'bridge'], ['2@2 2@4 2@6 2@10 2@12 2@14', 'center'], ['3@2 3@6 3@10 3@14', 'none'], ['3@4 3@12 2@8 1@2 1@14', 'ledges'],
-    ['3@3 3@8 3@13', 'stairs'], ['3@2 3@6 3@10 3@14', 'bricks'], ['3@2 3@14 3@8 2@5.5 2@10.5', 'pillars'], ['3@2 3@6 3@10 3@14', 'bridge'],
+    ['3@3 3@8 3@13', 'stairs'], ['3@2 3@6 3@10 3@14', 'bricks'], ['3@2 3@14 3@8 1@6 1@10', 'pillars'], ['3@2 3@6 3@10 3@14', 'bridge'],
   ];
   const START_Y = [7.8, 7.6, 7.4, 7.3];
   const TIPS = {
@@ -108,7 +108,9 @@
     const balloons = spec.split(' ').map((s, i) => {
       const [size, x] = s.split('@').map(Number);
       const r = RADIUS[size];
-      const y = t.top ? Math.min(START_Y[size], t.top - r - 0.05) : START_Y[size];
+      let y = t.top ? Math.min(START_Y[size], t.top - r - 0.05) : START_Y[size];
+      // a balloon that would start inside a block starts on top of it instead
+      for (const k of blocks) if (x + r > k.x0 && x - r < k.x1 && y - r < k.y1 && y + r > k.y0) y = k.y1 + r + 0.1;
       return { s: size, x, y, dir: x < W / 2 ? 1 : -1, c: i % COLORS.length };
     });
     if (sab === 'cage') {
