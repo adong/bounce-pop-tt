@@ -210,6 +210,15 @@
     .top .side.r { align-items: flex-end; }
     .tb { width: 66px; height: 66px; font-size: 26px; }
     .tb.fire { width: 84px; height: 84px; font-size: 15px; }
+    #touch.stack .pad { flex-direction: column; align-items: stretch; gap: 6px; }
+    #touch.stack .pad .row2 { display: flex; gap: 6px; }
+    #touch.stack .tb.fire { width: auto; height: 60px; border-radius: 18px; }
+  }
+  /* narrower screens: the middle of the HUD in two rows (the level and the clock, then the buttons), score cards stacked */
+  @media (max-width: 900px) {
+    .mid .row.a { flex-wrap: wrap; justify-content: center; max-width: 220px; gap: 6px; }
+    #lvlPill { order: 1; } #timePill { order: 2; } #btnPause { order: 3; } #btnMute { order: 4; } #icePill { order: 5; }
+    .top .side.l { flex-direction: column; align-items: flex-start; gap: 6px; }
   }
   /* short screens (a phone on its side): the HUD goes down the sides, next to the field */
   @media (max-height: 520px) {
@@ -233,16 +242,28 @@
     .card { padding: 12px 18px; gap: 8px; }
     .card h2 { font-size: clamp(24px, 9vh, 38px); }
     #banner { padding: 8px 20px 10px; }
-    .top { grid-template-columns: auto 1fr auto; }
-    .top .side { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .top .side.r { align-items: flex-end; }
-    .mid { grid-column: 3; grid-row: 2; align-items: flex-end; }
-    .mid .row { flex-direction: column; align-items: flex-end; gap: 5px; }
+    body:not(.wide-hud) .top { grid-template-columns: auto 1fr auto; row-gap: 6px; }
+    body:not(.wide-hud) .top .side { flex-direction: column; align-items: flex-start; gap: 6px; }
+    body:not(.wide-hud) .top .side.r { align-items: flex-end; }
+    body:not(.wide-hud) .mid { display: contents; }
+    body:not(.wide-hud) .mid .row.a { position: absolute; top: 64px; right: max(10px, env(safe-area-inset-right)); display: grid; grid-template-columns: auto auto; justify-items: end; gap: 5px; }
+    body:not(.wide-hud) #btnPause { grid-row: 1; grid-column: 1; }
+    body:not(.wide-hud) #btnMute { grid-row: 1; grid-column: 2; }
+    body:not(.wide-hud) #lvlPill, body:not(.wide-hud) #timePill, body:not(.wide-hud) #icePill { grid-column: 1 / span 2; }
+    body:not(.wide-hud) #hiPill { display: none; }
+    body:not(.wide-hud) .mid .row.b { grid-column: 1; grid-row: 2; justify-self: start; flex-direction: column; align-items: flex-start; gap: 4px; }
     #callBtn em { display: none; }
     #callBtn { padding: 3px; }
     #callBtn .face { width: 42px; height: 42px; }
     .pcard .face { width: 34px; height: 34px; }
     .pcard .score { font-size: 15px; }
+    /* 2 players on a phone on its side: the HUD stays across the top, each pad is a small stack beside the field */
+    #touch.stack .pad { flex-direction: column; align-items: stretch; }
+    #touch.stack .pad .row2 { display: flex; gap: 6px; }
+    #touch.stack .pad.l { left: 58px; }
+    body.wide-hud .mid .row.a { flex-wrap: nowrap; max-width: none; }
+    body.wide-hud .top .side.l { flex-direction: row; }
+    #touch.stack .tb.fire { width: auto; height: 56px; border-radius: 18px; }
     #toasts { top: 24vh; }
     .tb { width: 58px; height: 58px; font-size: 22px; border-radius: 18px; }
     .tb.small { width: 50px; height: 42px; font-size: 18px; }
@@ -262,16 +283,16 @@
       <div class="pcard hidden" id="pcardB"><img class="face" alt=""><div><b class="score" id="scoreB">0</b></div></div>
     </div>
     <div class="mid">
-      <div class="row">
+      <div class="row a">
         <button class="ibtn" id="btnPause" title="Pause (P)">❚❚</button>
         <div class="pill" id="lvlPill">LEVEL <b>1</b></div>
         <div class="pill time" id="timePill">⏱️ <b id="timeNum">0</b></div>
         <button class="ibtn" id="btnMute" title="Sound (M)">🔊</button>
+        <div class="pill small ice hidden" id="icePill"></div>
       </div>
-      <div class="row">
+      <div class="row b">
         <div class="pill small" id="livesPill"></div>
         <div class="pill small" id="hiPill">HI-SCORE <b id="hiNum">0</b></div>
-        <div class="pill small ice hidden" id="icePill"></div>
       </div>
     </div>
     <div class="side r">

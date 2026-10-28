@@ -100,14 +100,21 @@
     const btn = (i, k, label, extra = '') => `<button class="tb ${extra}" data-i="${i}" data-k="${k}">${label}</button>`;
     const climb = (i) => (ladders ? `<div class="col">${btn(i, 'u', '▲', 'small')}${btn(i, 'd', '▼', 'small')}</div>` : '');
     const fire = (i, c) => btn(i, 'f', 'FIRE', 'fire ' + c);
-    if (two) {
+    const stack = two && (innerHeight <= 520 || innerWidth <= 640);
+    $('touch').classList.toggle('stack', stack);
+    if (stack) {
+      // a phone on its side: climb, FIRE, then walk, stacked
+      const row = (h) => `<div class="row2">${h}</div>`;
+      $('padL').innerHTML = (ladders ? row(btn(0, 'u', '▲', 'small') + btn(0, 'd', '▼', 'small')) : '') + fire(0, 't') + row(btn(0, 'l', '◀') + btn(0, 'r', '▶'));
+      $('padR').innerHTML = (ladders ? row(btn(1, 'u', '▲', 'small') + btn(1, 'd', '▼', 'small')) : '') + fire(1, 'm') + row(btn(1, 'l', '◀') + btn(1, 'r', '▶'));
+    } else if (two) {
       $('padL').innerHTML = btn(0, 'l', '◀') + btn(0, 'r', '▶') + climb(0) + fire(0, 't');
       $('padR').innerHTML = fire(1, 'm') + climb(1) + btn(1, 'l', '◀') + btn(1, 'r', '▶');
     } else {
       $('padL').innerHTML = btn(0, 'l', '◀') + btn(0, 'r', '▶');
       $('padR').innerHTML = climb(0) + fire(0, '');
     }
-    G.padKey = `${two}${ladders}`;
+    G.padKey = `${two}${ladders}${stack}`;
   }
   function releasePads() {
     for (const p of pads) for (const k of Object.keys(p)) p[k] = false;
@@ -363,18 +370,26 @@
     const short = h <= 520;
     const touch = playing && G.touchOn && (G.screen === 'play' || G.screen === 'pause');
     $('touch').classList.toggle('hidden', !touch);
+    if (G.sim && G.padKey !== `${G.mode === '2p'}${!!G.sim.ladders.length}${G.mode === '2p' && (short || w <= 640)}`) buildPads();
+    const wide = short && touch && G.mode === '2p';
+    document.body.classList.toggle('wide-hud', wide);
     const top = document.querySelector('#hud .top');
     const r = (el) => el.getBoundingClientRect();
     view.margins.left = 58; // clear of the kit's round buttons in the middle of the left edge
     view.margins.right = w < 900 ? 8 : 12;
     if (playing) {
-      view.margins.top = short ? 6 : Math.min(h * 0.3, r(top).bottom + 6);
+      view.margins.top = short && !wide ? 6 : Math.min(h * 0.3, r(top).bottom + 6);
       view.margins.bottom = 6;
       if (touch && !short) view.margins.bottom = Math.max(r($('padL')).height, r($('padR')).height) + 18;
-      if (short) {
-        // a phone on its side: score cards and the left pad down the left, the buttons and the right pad down the right
-        const sideL = Math.max(r(document.querySelector('#hud .side.l')).width, touch ? r($('padL')).width : 0);
-        const sideR = Math.max(r(document.querySelector('#hud .side.r')).width, r(document.querySelector('#hud .mid')).width, touch ? r($('padR')).width : 0);
+      if (wide) {
+        // 2 players on a phone on its side: the HUD across the top, a small pad stack each side
+        view.margins.left = r($('padL')).right + 12;
+        view.margins.right = w - r($('padR')).left + 12;
+      } else if (short) {
+        // a phone on its side: score cards, lives and the left pad down the left; the buttons and the right pad down the right
+        const q = (sel) => r(document.querySelector(sel)).width;
+        const sideL = Math.max(q('#hud .side.l'), q('#hud .row.b'), touch ? r($('padL')).width : 0);
+        const sideR = Math.max(q('#hud .side.r'), q('#hud .row.a'), touch ? r($('padR')).width : 0);
         view.margins.left = Math.max(58, sideL + 18);
         view.margins.right = Math.max(8, sideR + 18);
       }
@@ -423,7 +438,7 @@
       label = here ? `${NAME[bud]} IS HERE!<small>tap to freeze again</small>` : `CALL ${NAME[bud]}<small>press T</small>`;
     }
     setText('call', btn.querySelector('em'), label, true);
-    const pk = `${G.mode === '2p'}${!!sim.ladders.length}`;
+    const pk = `${G.mode === '2p'}${!!sim.ladders.length}${G.mode === '2p' && (innerHeight <= 520 || innerWidth <= 640)}`;
     if (pk !== G.padKey) { buildPads(); layoutHud(); }
   }
 

@@ -210,6 +210,15 @@
     .top .side.r { align-items: flex-end; }
     .tb { width: 66px; height: 66px; font-size: 26px; }
     .tb.fire { width: 84px; height: 84px; font-size: 15px; }
+    #touch.stack .pad { flex-direction: column; align-items: stretch; gap: 6px; }
+    #touch.stack .pad .row2 { display: flex; gap: 6px; }
+    #touch.stack .tb.fire { width: auto; height: 60px; border-radius: 18px; }
+  }
+  /* narrower screens: the middle of the HUD in two rows (the level and the clock, then the buttons), score cards stacked */
+  @media (max-width: 900px) {
+    .mid .row.a { flex-wrap: wrap; justify-content: center; max-width: 220px; gap: 6px; }
+    #lvlPill { order: 1; } #timePill { order: 2; } #btnPause { order: 3; } #btnMute { order: 4; } #icePill { order: 5; }
+    .top .side.l { flex-direction: column; align-items: flex-start; gap: 6px; }
   }
   /* short screens (a phone on its side): the HUD goes down the sides, next to the field */
   @media (max-height: 520px) {
@@ -233,16 +242,28 @@
     .card { padding: 12px 18px; gap: 8px; }
     .card h2 { font-size: clamp(24px, 9vh, 38px); }
     #banner { padding: 8px 20px 10px; }
-    .top { grid-template-columns: auto 1fr auto; }
-    .top .side { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .top .side.r { align-items: flex-end; }
-    .mid { grid-column: 3; grid-row: 2; align-items: flex-end; }
-    .mid .row { flex-direction: column; align-items: flex-end; gap: 5px; }
+    body:not(.wide-hud) .top { grid-template-columns: auto 1fr auto; row-gap: 6px; }
+    body:not(.wide-hud) .top .side { flex-direction: column; align-items: flex-start; gap: 6px; }
+    body:not(.wide-hud) .top .side.r { align-items: flex-end; }
+    body:not(.wide-hud) .mid { display: contents; }
+    body:not(.wide-hud) .mid .row.a { position: absolute; top: 64px; right: max(10px, env(safe-area-inset-right)); display: grid; grid-template-columns: auto auto; justify-items: end; gap: 5px; }
+    body:not(.wide-hud) #btnPause { grid-row: 1; grid-column: 1; }
+    body:not(.wide-hud) #btnMute { grid-row: 1; grid-column: 2; }
+    body:not(.wide-hud) #lvlPill, body:not(.wide-hud) #timePill, body:not(.wide-hud) #icePill { grid-column: 1 / span 2; }
+    body:not(.wide-hud) #hiPill { display: none; }
+    body:not(.wide-hud) .mid .row.b { grid-column: 1; grid-row: 2; justify-self: start; flex-direction: column; align-items: flex-start; gap: 4px; }
     #callBtn em { display: none; }
     #callBtn { padding: 3px; }
     #callBtn .face { width: 42px; height: 42px; }
     .pcard .face { width: 34px; height: 34px; }
     .pcard .score { font-size: 15px; }
+    /* 2 players on a phone on its side: the HUD stays across the top, each pad is a small stack beside the field */
+    #touch.stack .pad { flex-direction: column; align-items: stretch; }
+    #touch.stack .pad .row2 { display: flex; gap: 6px; }
+    #touch.stack .pad.l { left: 58px; }
+    body.wide-hud .mid .row.a { flex-wrap: nowrap; max-width: none; }
+    body.wide-hud .top .side.l { flex-direction: row; }
+    #touch.stack .tb.fire { width: auto; height: 56px; border-radius: 18px; }
     #toasts { top: 24vh; }
     .tb { width: 58px; height: 58px; font-size: 22px; border-radius: 18px; }
     .tb.small { width: 50px; height: 42px; font-size: 18px; }
@@ -262,16 +283,16 @@
       <div class="pcard hidden" id="pcardB"><img class="face" alt=""><div><b class="score" id="scoreB">0</b></div></div>
     </div>
     <div class="mid">
-      <div class="row">
+      <div class="row a">
         <button class="ibtn" id="btnPause" title="Pause (P)">❚❚</button>
         <div class="pill" id="lvlPill">LEVEL <b>1</b></div>
         <div class="pill time" id="timePill">⏱️ <b id="timeNum">0</b></div>
         <button class="ibtn" id="btnMute" title="Sound (M)">🔊</button>
+        <div class="pill small ice hidden" id="icePill"></div>
       </div>
-      <div class="row">
+      <div class="row b">
         <div class="pill small" id="livesPill"></div>
         <div class="pill small" id="hiPill">HI-SCORE <b id="hiNum">0</b></div>
-        <div class="pill small ice hidden" id="icePill"></div>
       </div>
     </div>
     <div class="side r">
@@ -4323,14 +4344,21 @@ BP.SUBTITLE = 'Teddy & Tommy pop the bouncy balloons!';
     const btn = (i, k, label, extra = '') => `<button class="tb ${extra}" data-i="${i}" data-k="${k}">${label}</button>`;
     const climb = (i) => (ladders ? `<div class="col">${btn(i, 'u', '▲', 'small')}${btn(i, 'd', '▼', 'small')}</div>` : '');
     const fire = (i, c) => btn(i, 'f', 'FIRE', 'fire ' + c);
-    if (two) {
+    const stack = two && (innerHeight <= 520 || innerWidth <= 640);
+    $('touch').classList.toggle('stack', stack);
+    if (stack) {
+      // a phone on its side: climb, FIRE, then walk, stacked
+      const row = (h) => `<div class="row2">${h}</div>`;
+      $('padL').innerHTML = (ladders ? row(btn(0, 'u', '▲', 'small') + btn(0, 'd', '▼', 'small')) : '') + fire(0, 't') + row(btn(0, 'l', '◀') + btn(0, 'r', '▶'));
+      $('padR').innerHTML = (ladders ? row(btn(1, 'u', '▲', 'small') + btn(1, 'd', '▼', 'small')) : '') + fire(1, 'm') + row(btn(1, 'l', '◀') + btn(1, 'r', '▶'));
+    } else if (two) {
       $('padL').innerHTML = btn(0, 'l', '◀') + btn(0, 'r', '▶') + climb(0) + fire(0, 't');
       $('padR').innerHTML = fire(1, 'm') + climb(1) + btn(1, 'l', '◀') + btn(1, 'r', '▶');
     } else {
       $('padL').innerHTML = btn(0, 'l', '◀') + btn(0, 'r', '▶');
       $('padR').innerHTML = climb(0) + fire(0, '');
     }
-    G.padKey = `${two}${ladders}`;
+    G.padKey = `${two}${ladders}${stack}`;
   }
   function releasePads() {
     for (const p of pads) for (const k of Object.keys(p)) p[k] = false;
@@ -4586,18 +4614,26 @@ BP.SUBTITLE = 'Teddy & Tommy pop the bouncy balloons!';
     const short = h <= 520;
     const touch = playing && G.touchOn && (G.screen === 'play' || G.screen === 'pause');
     $('touch').classList.toggle('hidden', !touch);
+    if (G.sim && G.padKey !== `${G.mode === '2p'}${!!G.sim.ladders.length}${G.mode === '2p' && (short || w <= 640)}`) buildPads();
+    const wide = short && touch && G.mode === '2p';
+    document.body.classList.toggle('wide-hud', wide);
     const top = document.querySelector('#hud .top');
     const r = (el) => el.getBoundingClientRect();
     view.margins.left = 58; // clear of the kit's round buttons in the middle of the left edge
     view.margins.right = w < 900 ? 8 : 12;
     if (playing) {
-      view.margins.top = short ? 6 : Math.min(h * 0.3, r(top).bottom + 6);
+      view.margins.top = short && !wide ? 6 : Math.min(h * 0.3, r(top).bottom + 6);
       view.margins.bottom = 6;
       if (touch && !short) view.margins.bottom = Math.max(r($('padL')).height, r($('padR')).height) + 18;
-      if (short) {
-        // a phone on its side: score cards and the left pad down the left, the buttons and the right pad down the right
-        const sideL = Math.max(r(document.querySelector('#hud .side.l')).width, touch ? r($('padL')).width : 0);
-        const sideR = Math.max(r(document.querySelector('#hud .side.r')).width, r(document.querySelector('#hud .mid')).width, touch ? r($('padR')).width : 0);
+      if (wide) {
+        // 2 players on a phone on its side: the HUD across the top, a small pad stack each side
+        view.margins.left = r($('padL')).right + 12;
+        view.margins.right = w - r($('padR')).left + 12;
+      } else if (short) {
+        // a phone on its side: score cards, lives and the left pad down the left; the buttons and the right pad down the right
+        const q = (sel) => r(document.querySelector(sel)).width;
+        const sideL = Math.max(q('#hud .side.l'), q('#hud .row.b'), touch ? r($('padL')).width : 0);
+        const sideR = Math.max(q('#hud .side.r'), q('#hud .row.a'), touch ? r($('padR')).width : 0);
         view.margins.left = Math.max(58, sideL + 18);
         view.margins.right = Math.max(8, sideR + 18);
       }
@@ -4646,7 +4682,7 @@ BP.SUBTITLE = 'Teddy & Tommy pop the bouncy balloons!';
       label = here ? `${NAME[bud]} IS HERE!<small>tap to freeze again</small>` : `CALL ${NAME[bud]}<small>press T</small>`;
     }
     setText('call', btn.querySelector('em'), label, true);
-    const pk = `${G.mode === '2p'}${!!sim.ladders.length}`;
+    const pk = `${G.mode === '2p'}${!!sim.ladders.length}${G.mode === '2p' && (innerHeight <= 520 || innerWidth <= 640)}`;
     if (pk !== G.padKey) { buildPads(); layoutHud(); }
   }
 
