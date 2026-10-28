@@ -61,7 +61,7 @@
     { sky: ['#8fd3ff', '#ffe0ee'], sun: '#ffe680', sx: 170, sy: 210, cloud: '#ffffff', hill: ['#a6e58c', '#6fcf6a'] },          // morning
     { sky: ['#43b9ff', '#c4efff'], sun: '#fff27a', sx: 860, sy: 110, cloud: '#ffffff', hill: ['#98e07e', '#55c260'] },          // daytime
     { sky: ['#7d63e8', '#ff8f6b', '#ffd27a'], sun: '#ff6b4f', sx: 780, sy: 330, cloud: '#ffd0e8', hill: ['#c79b6b', '#a77e58'], tint: 'rgba(255,140,90,0.22)' },
-    { sky: ['#101a52', '#33479f'], moon: true, sx: 820, sy: 120, cloud: 'rgba(200,210,255,0.25)', hill: ['#3b5f8e', '#2b4a75'], tint: 'rgba(40,50,140,0.42)' },
+    { sky: ['#18246a', '#3f56b8'], moon: true, sx: 820, sy: 120, cloud: 'rgba(200,210,255,0.25)', hill: ['#3b5f8e', '#2b4a75'], tint: 'rgba(40,50,140,0.3)' },
   ];
 
   function sky(g, P) {
@@ -141,10 +141,13 @@
         }
       }
       for (const [x, y] of [pts[3], pts[5], pts[1]]) {
-        rect(g, x - 40, y - 80, 80, 70, '#e6cc9a');
-        path(g, [[x - 52, y - 80], [x, y - 116], [x + 52, y - 80]]);
-        fillLine(g, '#c0503a');
-        rect(g, x - 12, y - 52, 24, 30, '#5b4636', 3);
+        // a watchtower: battlements on top and arched windows
+        rect(g, x - 42, y - 84, 84, 74, '#e6cc9a');
+        for (let k = 0; k < 4; k++) rect(g, x - 42 + k * 24, y - 102, 12, 18, '#e6cc9a', 4);
+        for (const dx of [-20, 8]) {
+          g.beginPath(); g.moveTo(x + dx, y - 30); g.lineTo(x + dx, y - 52); g.arc(x + dx + 6, y - 52, 6, Math.PI, 0); g.lineTo(x + dx + 12, y - 30); g.closePath();
+          fillLine(g, '#5b4636', 3);
+        }
       }
       hills(g, 560, 18, P.hill[1], 5);
     },

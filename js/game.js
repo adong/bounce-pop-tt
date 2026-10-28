@@ -43,7 +43,7 @@
     if (fresh && !e.repeat) { pressed.add(e.code); onKey(e.code); }
   });
   addEventListener('keyup', (e) => keys.delete(e.code));
-  addEventListener('blur', () => { keys.clear(); releasePads(); });
+  addEventListener('blur', () => { keys.clear(); tapped.clear(); pressed.clear(); releasePads(); });
 
   function onKey(code) {
     const sc = G.screen;

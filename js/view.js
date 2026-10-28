@@ -18,7 +18,7 @@
   const boxGeo = new T.BoxGeometry(1, 1, 1);
   const knotGeo = new T.ConeGeometry(0.12, 0.16, 10);
   const stringGeo = new T.CylinderGeometry(0.012, 0.012, 1, 5);
-  const ropeGeo = new T.CylinderGeometry(0.075, 0.075, 1, 10, 1, true);
+  const ropeGeo = new T.CylinderGeometry(0.1, 0.1, 1, 10, 1, true);
   const flat = (map, o) => new T.MeshBasicMaterial(Object.assign({ map, transparent: true, depthWrite: false }, o));
   const MATS = {};
   function balloonMat(c, frozen) {
@@ -478,7 +478,7 @@
     const line = new T.Mesh(ropeGeo, mats[0]);
     g.add(line);
     const headMats = [new T.MeshStandardMaterial({ color: '#ff4f6d', roughness: 0.4 }), new T.MeshStandardMaterial({ color: '#ffb3d9', roughness: 0.3 })];
-    const head = new T.Mesh(new T.SphereGeometry(0.17, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.6), headMats[0]);
+    const head = new T.Mesh(new T.SphereGeometry(0.22, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.6), headMats[0]);
     g.add(head);
     return { g, line, head, mats, headMats };
   };
